@@ -21,7 +21,7 @@ export default function Home() {
 
         setLoading(true);
         try {
-            const res = await axios.post(`http://localhost:5000/api/scan/${scanType}`, 
+            const res = await axios.post(`https://security-check-qgnx.onrender.com/api/scan/${scanType}`, 
                 { url },
                 { timeout: 30000 }
             );

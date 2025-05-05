@@ -7,7 +7,14 @@ const {runMediumScan} = require('./scans/mediumScan.js');
 const axios = require('axios');
 
 const app = express();
-app.use(cors());
+
+app.use(cors({
+  origin: 'https://security-check-xi.vercel.app',
+  credentials: true,
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Accept']
+}));
+
 app.use(bodyParser.json());
 
 app.post('/api/scan/light', async (req, res) => {

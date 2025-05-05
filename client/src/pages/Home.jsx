@@ -25,10 +25,9 @@ export default function Home() {
                 { url },
                 { 
                     timeout: 30000,
-                    withCredentials: true,
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json',
+                        'Accept': 'application/json'
                     }
                 }
             );
@@ -43,12 +42,8 @@ export default function Home() {
                 setError('Request timed out. The server took too long to respond.');
             } else if (err.message.includes('Network Error')) {
                 setError('Network error. Please check your connection and try again.');
-            } else if (err.response?.status === 502) {
-                setError('Server is temporarily unavailable. Please try again later.');
-            } else if (err.response?.data?.error) {
-                setError(err.response.data.error);
             } else {
-                setError('An unexpected error occurred. Please try again.');
+                setError(err.response?.data?.error || 'Scan failed - please try again');
             }
         } finally {
             setLoading(false);

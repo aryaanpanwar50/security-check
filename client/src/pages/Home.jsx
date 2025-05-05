@@ -20,17 +20,18 @@ export default function Home() {
 
         setLoading(true);
         try {
-            const res = await axios.post(
-                `https://security-check-qgnx.onrender.com/api/scan/${scanType}`, 
-                { url },
-                { 
-                    timeout: 30000,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    }
-                }
-            );
+            const baseURL = import.meta.env.VITE_API_URL || 'https://security-check-qgnx.onrender.com';
+            const res = await axios({
+                method: 'post',
+                url: `${baseURL}/api/scan/${scanType}`,
+                data: { url },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                timeout: 30000
+            });
+            
             if (res.data.error) {
                 setError(res.data.error);
                 return;
@@ -38,10 +39,11 @@ export default function Home() {
             setReport(res.data.report);
             
         } catch (err) {
-            if (err.code === 'ECONNABORTED') {
+            console.error('Scan error:', err);
+            if (err.code === 'ERR_NETWORK') {
+                setError('Network error: Unable to reach the scanning service. Please try again later.');
+            } else if (err.code === 'ECONNABORTED') {
                 setError('Request timed out. The server took too long to respond.');
-            } else if (err.message.includes('Network Error')) {
-                setError('Network error. Please check your connection and try again.');
             } else {
                 setError(err.response?.data?.error || 'Scan failed - please try again');
             }

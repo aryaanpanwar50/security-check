@@ -8,11 +8,23 @@ const axios = require('axios');
 
 const app = express();
 
+const allowedOrigins = [
+    'https://security-check-xi.vercel.app',
+    'http://localhost:5173',  // Vite default dev server
+    'http://localhost:3000'
+];
+
 app.use(cors({
-  origin: 'https://security-check-xi.vercel.app',
-  credentials: true,
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Accept']
+    origin: function(origin, callback) {
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Accept'],
+    optionsSuccessStatus: 200
 }));
 
 app.use(bodyParser.json());
@@ -66,5 +78,13 @@ app.post('/api/scan/medium', async (req, res) => {
         res.status(500).json({error:err.message})
     }
 })
+
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({
+        error: 'Something broke!',
+        details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+});
 
 app.listen(5000, () => console.log('Server running on http://localhost:5000'));

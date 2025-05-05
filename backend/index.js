@@ -8,24 +8,16 @@ const axios = require('axios');
 
 const app = express();
 
-const allowedOrigins = [
-    'https://security-check-xi.vercel.app',
-    'http://localhost:5173',  // Vite default dev server
-    'http://localhost:3000'
-];
+const corsOptions = {
+    origin: ['https://security-check-xi.vercel.app', 'http://localhost:5173'],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+    allowedHeaders: ['Content-Type', 'Accept']
+};
 
-app.use(cors({
-    origin: function(origin, callback) {
-        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Accept'],
-    optionsSuccessStatus: 200
-}));
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Handle preflight
 
 app.use(bodyParser.json());
 
@@ -80,10 +72,9 @@ app.post('/api/scan/medium', async (req, res) => {
 })
 
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({
-        error: 'Something broke!',
-        details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    console.error('Error:', err);
+    res.status(err.status || 500).json({
+        error: err.message || 'Internal Server Error'
     });
 });
 

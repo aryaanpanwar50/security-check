@@ -12,7 +12,6 @@ export default function Home() {
     async function runScan(scanType) {
         setError('');
         setReport(null);
-
         
         if (!url || !/^https?:\/\/.+/.test(url)) {
             setError('Please enter a valid URL');
@@ -21,9 +20,17 @@ export default function Home() {
 
         setLoading(true);
         try {
-            const res = await axios.post(`https://security-check-qgnx.onrender.com/api/scan/${scanType}`, 
+            const res = await axios.post(
+                `https://security-check-qgnx.onrender.com/api/scan/${scanType}`, 
                 { url },
-                { timeout: 30000 }
+                { 
+                    timeout: 30000,
+                    withCredentials: true,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    }
+                }
             );
             if (res.data.error) {
                 setError(res.data.error);
@@ -32,7 +39,17 @@ export default function Home() {
             setReport(res.data.report);
             
         } catch (err) {
-            setError(err.response?.data?.error || 'Scan failed - please try again');
+            if (err.code === 'ECONNABORTED') {
+                setError('Request timed out. The server took too long to respond.');
+            } else if (err.message.includes('Network Error')) {
+                setError('Network error. Please check your connection and try again.');
+            } else if (err.response?.status === 502) {
+                setError('Server is temporarily unavailable. Please try again later.');
+            } else if (err.response?.data?.error) {
+                setError(err.response.data.error);
+            } else {
+                setError('An unexpected error occurred. Please try again.');
+            }
         } finally {
             setLoading(false);
         }
